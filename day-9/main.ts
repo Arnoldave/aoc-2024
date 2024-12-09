@@ -10,52 +10,49 @@ const isEven = (number: number) => {
   return number % 2 === 0;
 };
 
-const getMemory = (diskMap: string) => {
-  let memory = "";
+const getMemory = (diskMap: string): (number | '.')[] => {
+  let memory = [];
   for (var i = 0; i < diskMap.length; i++) {
     const size = Number(diskMap[i]);
-    const id = isEven(i) ? `[${Math.floor(i / 2)}]` : ".";
+    const id = isEven(i) ? Math.floor(i / 2) : ".";
 
     for (var j = 0; j < size; j++) {
-      memory = `${memory}${id}`;
+      memory.push(id);
     }
   }
 
   return memory;
 };
 
-const getOptimizedMemory = (memory: string) => {
-  while (true) {
-    const ids = memory.match(/\[\d\]/g) ?? [];
-    if (memory.indexOf(".") === -1) {
-      break;
-    }
+const optimize = (memory: (number | '.')[]) => {
+  let firstSpace = memory.indexOf('.');
+  let ids = memory.filter((x) => typeof x === 'number');
+  let lastId = memory.lastIndexOf(ids[ids.length - 1]);
 
-    memory = memory.replace(".", ids[ids.length - 1]);
-    console.log(ids, memory);
+  while (firstSpace >= 0 && firstSpace < lastId) {
+    console.log(firstSpace, lastId);
+
+    memory[firstSpace] = memory[lastId];
+    memory.splice(lastId, 1);
+
+    firstSpace = memory.indexOf('.');
+    ids = memory.filter((x) => typeof x === 'number');
+    lastId = memory.lastIndexOf(ids[ids.length - 1]);
   }
 
-  return memory;
-};
+  memory.splice(firstSpace);
+}
+
+const getFileSystemChecksum = (memory: number[]) => {
+  return memory.reduce((partialSum, a, index) => partialSum + (a * index), 0);
+}
 
 const part1 = () => {
   const input = getInput();
   const memory = getMemory(input);
-  console.log(memory);
-  const optimizedMemory = getOptimizedMemory(memory);
-  console.log(optimizedMemory);
+  optimize(memory);
 
-  const fileSystemChecksums: number[] = [];
-  for (var i = 0; i < optimizedMemory.length; i++) {
-    if (optimizedMemory[i] === ".") {
-      break;
-    }
-
-    const id = Number(optimizedMemory[i]);
-    fileSystemChecksums.push(id * i);
-  }
-
-  return fileSystemChecksums.reduce((partialSum, a) => partialSum + a, 0);
+  return getFileSystemChecksum(memory as number[]);
 };
 
 console.log(part1());
